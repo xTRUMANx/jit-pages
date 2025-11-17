@@ -26,13 +26,13 @@ export default function EditFormattingDialog({ page }: { page: Page }) {
       <DialogTrigger asChild>
         <Button>Edit Formatting</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-7xl sm:max-h-11/12 sm:m-4 overflow-scroll">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-11/12 sm:max-h-11/12 sm:m-4 overflow-scroll flex flex-col">
+        <DialogHeader className="flex-none">
           <DialogTitle>Edit Data</DialogTitle>
         </DialogHeader>
-        <DialogDescription>Edit how data is presented.</DialogDescription>
+        <DialogDescription className="flex-none">Edit how data is presented.</DialogDescription>
         <FieldPropertyTable fields={fields} setFields={setFields} />
-        <DialogFooter className="mt-4">
+        <DialogFooter className="mt-4 flex-none">
           <DialogClose asChild>
             <Button variant="outline">Cancel</Button>
           </DialogClose>

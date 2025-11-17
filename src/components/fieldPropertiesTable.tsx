@@ -1,5 +1,5 @@
 import { cx } from "class-variance-authority";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { FieldProperty } from "@/lib/interfaces";
 import {
@@ -26,6 +26,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { RenderValue } from "@/components/renderer";
+import { NativeSelect, NativeSelectOption } from "./ui/native-select";
 
 const fieldPropertyColumnHelper = createColumnHelper<FieldProperty>();
 const fieldPropertyColumns = [
@@ -46,6 +47,8 @@ export default function FieldPropertyTable({
   fields: FieldProperty[];
   setFields: (fields: FieldProperty[]) => void;
 }) {
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
   const skipPageResetRef = useRef(false);
 
   const table = useReactTable({
@@ -54,10 +57,10 @@ export default function FieldPropertyTable({
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     autoResetPageIndex: !skipPageResetRef.current,
-    initialState: {
+    state: {
       pagination: {
-        pageIndex: 0,
-        pageSize: 10,
+        pageIndex: pageIndex,
+        pageSize: pageSize,
       },
     },
   });
@@ -85,67 +88,69 @@ export default function FieldPropertyTable({
 
   return (
     <>
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header, index) => {
-                const type = typeof table
-                  .getRowModel()
-                  .rows[0].getVisibleCells()
-                  [index].getValue();
+      <div className="overflow-scroll grow">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header, index) => {
+                  const type = typeof table
+                    .getRowModel()
+                    .rows[0].getVisibleCells()
+                    [index].getValue();
 
-                return (
-                  <TableHead key={header.id}>
-                    <div className="flex gap-2">
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                  return (
+                    <TableHead key={header.id}>
+                      <div className="flex gap-2">
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                        {type === "boolean" ? (
+                          <Checkbox
+                            defaultChecked
+                            onCheckedChange={(v) =>
+                              toggleAllBooleanField(header.column.id, !!v)
+                            }
+                          />
+                        ) : null}
+                      </div>
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id} className="odd:bg-muted">
+                {row.getVisibleCells().map((cell) => {
+                  const value = cell.getValue();
+                  const type = typeof value;
+
+                  return (
+                    <TableCell key={cell.id}>
                       {type === "boolean" ? (
                         <Checkbox
-                          defaultChecked
-                          onCheckedChange={(v) =>
-                            toggleAllBooleanField(header.column.id, !!v)
+                          checked={!!value}
+                          onCheckedChange={() =>
+                            toggleBooleanField(cell.row.index, cell.column.id)
                           }
                         />
-                      ) : null}
-                    </div>
-                  </TableHead>
-                );
-              })}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows.map((row) => (
-            <TableRow key={row.id} className="odd:bg-muted">
-              {row.getVisibleCells().map((cell) => {
-                const value = cell.getValue();
-                const type = typeof value;
-
-                return (
-                  <TableCell key={cell.id}>
-                    {type === "boolean" ? (
-                      <Checkbox
-                        checked={!!value}
-                        onCheckedChange={() =>
-                          toggleBooleanField(cell.row.index, cell.column.id)
-                        }
-                      />
-                    ) : (
-                      <RenderValue key={cell.id} value={cell.getValue()} />
-                    )}
-                  </TableCell>
-                );
-              })}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      <Pagination>
+                      ) : (
+                        <RenderValue key={cell.id} value={cell.getValue()} />
+                      )}
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      <Pagination className="flex-none">
         <PaginationContent>
           <PaginationItem>
             <PaginationPrevious
@@ -155,7 +160,8 @@ export default function FieldPropertyTable({
               })}
               onClick={(e) => {
                 e.preventDefault();
-                table.previousPage();
+                // table.previousPage();
+                if (table.getCanPreviousPage()) setPageIndex(pageIndex - 1);
               }}
             />
           </PaginationItem>
@@ -171,9 +177,25 @@ export default function FieldPropertyTable({
               href="#"
               onClick={(e) => {
                 e.preventDefault();
-                table.nextPage();
+                // table.nextPage();
+                if (table.getCanNextPage()) setPageIndex(pageIndex + 1);
               }}
             />
+          </PaginationItem>
+          <PaginationItem>
+            <NativeSelect
+              className="text-center"
+              value={table.getState().pagination.pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+              }}
+            >
+              {["5", "20", table.getCoreRowModel().rows.length].map((pageSize) => (
+                <NativeSelectOption key={pageSize} value={pageSize}>
+                  {pageSize}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
           </PaginationItem>
         </PaginationContent>
       </Pagination>
