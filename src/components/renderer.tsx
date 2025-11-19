@@ -24,9 +24,7 @@ import {
 } from "@/components/ui/table";
 import type { Page } from "@/lib/interfaces";
 import EditFormattingDialog from "@/components/editFormattingDialog";
-import { Button } from "./ui/button";
 import { usePageStore } from "@/lib/store";
-import { Edit2Icon, RefreshCwIcon } from "lucide-react";
 
 export default function Renderer() {
     const page = usePageStore().getSelectedPage();
@@ -35,7 +33,6 @@ export default function Renderer() {
 
   return (
     <>
-      <PageTitle page={page} />
       <EditFormattingDialog page={page} />
       {!page.data ? null : Array.isArray(page.data) ? (
         <DynamicTable page={page} />
@@ -44,37 +41,6 @@ export default function Renderer() {
       ) : (
         JSON.stringify(page.data)
       )}
-    </>
-  );
-}
-
-function PageTitle({ page }: { page: Page }) {
-  const fetchingPage = usePageStore.use.fetchingPage();
-  const fetchSelectedPageData = usePageStore.use.fetchSelectedPageData();
-  const toggleIsEditingPage = usePageStore.use.toggleIsEditingPage();
-  const title = page.name || "Untitled Page";
-  return (
-    <>
-      <h2 className="text-2xl font-bold mb-4 flex gap-2">
-        {title}
-        <Button
-          variant="outline"
-          size="icon"
-          aria-label="Refresh Data"
-          onClick={fetchSelectedPageData}
-          disabled={fetchingPage}
-        >
-          <RefreshCwIcon className={cx({"animate-spin": fetchingPage})} />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          aria-label="Refresh Data"
-          onClick={toggleIsEditingPage}
-        >
-          <Edit2Icon />
-        </Button>
-      </h2>
     </>
   );
 }
