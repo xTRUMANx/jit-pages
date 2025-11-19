@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/pagination";
 import { RenderValue } from "@/components/renderer";
 import { NativeSelect, NativeSelectOption } from "./ui/native-select";
+import { Label } from "./ui/label";
 
 const fieldPropertyColumnHelper = createColumnHelper<FieldProperty>();
 const fieldPropertyColumns = [
@@ -101,13 +102,7 @@ export default function FieldPropertyTable({
 
                   return (
                     <TableHead key={header.id}>
-                      <div className="flex gap-2">
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
+                      <Label className="flex gap-2">
                         {type === "boolean" ? (
                           <Checkbox
                             defaultChecked
@@ -116,7 +111,13 @@ export default function FieldPropertyTable({
                             }
                           />
                         ) : null}
-                      </div>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </Label>
                     </TableHead>
                   );
                 })}
@@ -190,11 +191,13 @@ export default function FieldPropertyTable({
                 setPageSize(Number(e.target.value));
               }}
             >
-              {["5", "20", table.getCoreRowModel().rows.length].map((pageSize) => (
-                <NativeSelectOption key={pageSize} value={pageSize}>
-                  {pageSize}
-                </NativeSelectOption>
-              ))}
+              {["5", "20", table.getCoreRowModel().rows.length].map(
+                (pageSize) => (
+                  <NativeSelectOption key={pageSize} value={pageSize}>
+                    {pageSize}
+                  </NativeSelectOption>
+                )
+              )}
             </NativeSelect>
           </PaginationItem>
         </PaginationContent>

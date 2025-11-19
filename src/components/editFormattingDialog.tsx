@@ -15,11 +15,14 @@ import { usePageStore } from "@/lib/store";
 
 export default function EditFormattingDialog({ page }: { page: Page }) {
   const updatePageFields = usePageStore.use.updatePageFields();
-  const fields = page.fields;
+  const isEditingPage = usePageStore.use.isEditingPage();
+  const fields = page.fields ?? [];
 
   const setFields = (fields: FieldProperty[]) => {
     updatePageFields(page, fields);
   };
+
+  if(!page.data || !isEditingPage) return;
 
   return (
     <Dialog>

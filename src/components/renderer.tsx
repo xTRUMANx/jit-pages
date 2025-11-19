@@ -24,20 +24,57 @@ import {
 } from "@/components/ui/table";
 import type { Page } from "@/lib/interfaces";
 import EditFormattingDialog from "@/components/editFormattingDialog";
+import { Button } from "./ui/button";
+import { usePageStore } from "@/lib/store";
+import { Edit2Icon, RefreshCwIcon } from "lucide-react";
 
-export default function Renderer({ page }: { page: Page }) {
-  if (!page.data) return;
+export default function Renderer() {
+    const page = usePageStore().getSelectedPage();
+  
+  if (!page) return;
 
   return (
     <>
+      <PageTitle page={page} />
       <EditFormattingDialog page={page} />
-      {Array.isArray(page.data) ? (
+      {!page.data ? null : Array.isArray(page.data) ? (
         <DynamicTable page={page} />
       ) : typeof page.data === "object" ? (
         <RenderObject page={page} />
       ) : (
         JSON.stringify(page.data)
       )}
+    </>
+  );
+}
+
+function PageTitle({ page }: { page: Page }) {
+  const fetchingPage = usePageStore.use.fetchingPage();
+  const fetchSelectedPageData = usePageStore.use.fetchSelectedPageData();
+  const toggleIsEditingPage = usePageStore.use.toggleIsEditingPage();
+  const title = page.name || "Untitled Page";
+  return (
+    <>
+      <h2 className="text-2xl font-bold mb-4 flex gap-2">
+        {title}
+        <Button
+          variant="outline"
+          size="icon"
+          aria-label="Refresh Data"
+          onClick={fetchSelectedPageData}
+          disabled={fetchingPage}
+        >
+          <RefreshCwIcon className={cx({"animate-spin": fetchingPage})} />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          aria-label="Refresh Data"
+          onClick={toggleIsEditingPage}
+        >
+          <Edit2Icon />
+        </Button>
+      </h2>
     </>
   );
 }
@@ -50,11 +87,11 @@ function RenderObject({ page }: { page: Page }) {
   return (
     <div className="grid grid-cols-4 gap-2">
       {keys.map((k, i) => (
-        <div className="flex flex-col">
+        <div key={k} className="flex flex-col">
           <span className="font-bold" key={`k-${i}}`}>
             {k}
           </span>
-          <span key={`v-${i}}`}>
+          <span key={`v-${i}}`} className="truncate">
             <RenderValue value={page.data[k]} />
           </span>
         </div>

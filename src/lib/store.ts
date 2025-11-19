@@ -4,34 +4,45 @@ import type { FieldProperty, Page } from "@/lib/interfaces";
 
 let nextId = 0;
 const initialPages: Page[] = [
-  createNewPage({
+  createPage({
     name: "My Repos",
     url: "https://api.github.com/users/xtrumanx/repos",
-    fields: []
+    fetchDataOnLoad: true,
+    fields: [],
   }),
-  createNewPage({
+  createPage({
     name: "Random Repo",
     url: "https://api.github.com/repos/xTRUMANx/codenamebuild",
-    fields: []
+    fetchDataOnLoad: false,
+    fields: [],
   }),
 ];
 
-function createNewPage(page: Page) {
-  return { ...page, id: ++nextId, };
+function createNewPage(name: string) {
+  return { name, id: ++nextId, fields: [] };
+}
+
+function createPage(page: Page) {
+  return { ...page, id: ++nextId, fields: [] };
 }
 
 type PageStoreState = {
   pages: Page[];
   selectedPageId: number | null;
+  fetchingPage: boolean;
+  isEditingPage: boolean;
 };
 
 type PageStoreActions = {
+  setFetchingPage: (fetching: boolean) => void;
+  toggleIsEditingPage: () => void;
   getSelectedPage: () => Page | undefined;
-  createPage: (page: Page) => void;
+  createPage: (name: string) => void;
   selectPage: (page: Page) => void;
   deletePage: (page: Page) => void;
   updatePage: (page: Page) => void;
   updatePageFields: (page: Page, fields: FieldProperty[]) => void;
+  fetchSelectedPageData: () => Promise<void>;
 };
 
 type PageStore = PageStoreState & PageStoreActions;
@@ -39,6 +50,11 @@ type PageStore = PageStoreState & PageStoreActions;
 const store = create<PageStore>()((set, get) => ({
   pages: initialPages,
   selectedPageId: 1,
+  fetchingPage: false,
+  isEditingPage: true,
+  setFetchingPage: (fetchingPage) => set({ fetchingPage }),
+  toggleIsEditingPage: () =>
+    set((state) => ({ isEditingPage: !state.isEditingPage })),
   getSelectedPage: () => {
     var id = get().selectedPageId;
 
@@ -46,8 +62,8 @@ const store = create<PageStore>()((set, get) => ({
 
     return get().pages.find((p) => p.id === id);
   },
-  createPage: (page) => {
-    var newPage = createNewPage(page);
+  createPage: (name) => {
+    var newPage = createNewPage(name);
     set({ pages: [...get().pages, newPage], selectedPageId: newPage.id });
   },
   selectPage: (page) => {
@@ -86,6 +102,32 @@ const store = create<PageStore>()((set, get) => ({
     if (pageIndex === -1) return;
     newPages[pageIndex] = { ...page, fields: fields };
     set({ pages: newPages });
+  },
+  fetchSelectedPageData: async () => {
+    const selectedPage = get().getSelectedPage();
+    if (!selectedPage) return;
+
+    if (!selectedPage.url) {
+      get().updatePage({
+        ...{ ...selectedPage, data: "invalid url" },
+        id: selectedPage?.id,
+      });
+
+      get().setFetchingPage(false);
+
+      return;
+    }
+
+    get().setFetchingPage(true);
+
+    var res = await fetch(selectedPage.url.toString());
+
+    get().updatePage({
+      ...{ ...selectedPage, data: await res.json() },
+      id: selectedPage?.id,
+    });
+
+    get().setFetchingPage(false);
   },
 }));
 

@@ -3,6 +3,7 @@ export interface Page {
   name: string;
   url?: string;
   data?: any;
+  fetchDataOnLoad?: boolean;
   fields: FieldProperty[];
 }
 

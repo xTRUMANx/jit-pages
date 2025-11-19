@@ -26,7 +26,7 @@ function FieldInfo({ field }: { field: AnyFieldApi }) {
   );
 }
 
-export default function NewPageDialog() {
+export default function NewPageDialog({children}: {children?: React.ReactNode}) {
   const [open, setOpen] = useState(false);
   const pages = usePageStore.use.pages();
   const createPage = usePageStore.use.createPage();
@@ -49,7 +49,7 @@ export default function NewPageDialog() {
       },
     },
     onSubmit: async ({ value }) => {
-      createPage({ name: value.name });
+      createPage(value.name);
       form.reset();
       setOpen(false);
     },
@@ -58,7 +58,7 @@ export default function NewPageDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Create New Page</Button>
+        {children}
       </DialogTrigger>
       <DialogContent>
         <form
